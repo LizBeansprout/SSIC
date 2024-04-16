@@ -9,3 +9,5 @@ def processInput():
 def processOuput():
     pass
 
+def ประกาศฟังชั่น(อินพุต):
+    pass
