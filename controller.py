@@ -32,6 +32,7 @@ def isAnyData(sheet):
     print("None in Table!")
     return False
 
+#Ozone, Tawan
 def analyze(sheet):
     if isAnyData(sheet):
         try:
@@ -40,6 +41,9 @@ def analyze(sheet):
             print("Err")
     else:
         print("Import your data or filled the table")
+#Sun
+def drawGraph(optiaml_input):
+    pass
 
 def exportReport():
     pass
