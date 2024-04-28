@@ -33,10 +33,34 @@ def isAnyData(sheet):
     return False
 
 #Ozone, Tawan
-def analyze(sheet):
+def analyze(sheet, L, AVG, z, K, h, STD, AVGL, STDL, r, R, Q, D):
     if isAnyData(sheet):
         try:
-            pass
+            # (Q, R) Policy
+            AverageDemandDuringLeadTime = L * AVG 
+            SafetyStock = z * STD * math.sqrt(L)
+            ReorderLevel = (L * AVG) + (z * STD * math.sqrt(L))
+            OrderQuantity = math.sqrt(((2 * K) * AVG) / h)
+            InventoryLevelBeforeReceivingAnOrder = z * STD * math.sqrt(L)
+            InventoryLevelAfterReceivingAnOrder = (Q + z) * STD * math.sqrt(L)
+            AverageInventory = Q / (2 + (z * STD * math.sqrt(L)))
+            ReorderPoint = (AVG * AVGL) + z * math.sqrt((AVGL * STD^2) + (AVG^2 * STDL^2))
+            DemandDuringLeadTime = AVG * AVGL
+            StandardDeviationOfDemandDuringLeadTime = math.sqrt((AVGL * STD^2) + (AVG^2 * STDL^2))
+            AmountOfSafetyStock = z * math.sqrt((AVGL * STD^2) + (AVG^2 * STDL^2))
+            # (s, S) Policy
+            s = R 
+            S = R + Q
+            # Base-stock level Policy
+            AverageDemandDuringAnIntervalOfRplusLDays = (r + L) * AVG
+            SafetyStockBS = z * STD * math.sqrt(r + L)
+            BasestockLevelS = (r + L) * AVG + (z * STD * math.sqrt(r + L))
+            AverageInventoryBS = (r * D) / (2 + (z * STD * math.sqrt(r + L)))
+            # Base-stock level Policy (Lead time = uncertain, Normally distributed with lead time of AVGL, and STDL)
+            AverageDemandDuringAnIntervalOfRplusLDaysUncertain = (r + AVGL) * AVG
+            StandardDeviationOfDemandDuringAnIntervalOfRplusLDaysUncertain = math.sqrt((r + AVGL) * STD^2 + (AVG^2 * STDL^2))
+            SafetyStockBSUncertain = z * math.sqrt((r + AVGL) * STD^2 + (AVG^2 * STDL^2))
+            BasestockLevelSUncertain = (r + AVGL) * AVG + SafetyStockBSUncertain
         except:
             print("Err")
     else:
