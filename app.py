@@ -52,9 +52,13 @@ nav_sheet_frame.grid(row=1, sticky="sw")
 # Adding import button
 import_product_button = tk.Button(left_frame, text = "Import Product",width = 50, height = 2, command = controller.importProductExcel)
 import_sale_button = tk.Button(left_frame, text = "Import Sale",width = 50, height = 2, state = "disabled", command = controller.importSaleExcel)
+set_product_button = tk.Button(left_frame, text = "set",width = 3, height = 2, state = 'disabled', command = controller.initiateSetProduct)
+set_sale_button = tk.Button(left_frame, text = "set",width = 3, height = 2, state = 'disabled', command = controller.initiateSetSale)
 
 import_product_button.grid(row=0, column=0, pady=(0,8) )
 import_sale_button.grid(row=1, column=0, pady=(0,8) )
+set_product_button.grid(row=0, column=1, pady=(0,8) )
+set_sale_button.grid(row=1, column=1, pady=(0,8) )
 
-analyze_button = tk.Button(left_frame, text = "Analyze",width = 50, height = 2)
+analyze_button = tk.Button(left_frame, text = "Analyze",width = 50, height = 2, state = 'disabled', command = controller.intiateAnalyze)
 analyze_button.grid(row=2, column=0)
