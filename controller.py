@@ -13,10 +13,9 @@ import config
 
 active_index = None
 active_type = None
-analyzed = []
 
-set_head_product = [0,1,2,3,4]
-set_head_sale = [0,1,2]
+set_head_product = []
+set_head_sale = []
 
 product_sheet_arr = []
 sale_sheet_arr = []
@@ -141,6 +140,7 @@ def selectSheet(selected_sheet_index):
     set_head_sale = []
     app.set_product_button.config(fg="black")
     app.set_sale_button.config(fg="black")
+    app.analyze_button["state"] = "disabled"
 
     if (isAnyProductData()):
         app.set_product_button["state"] = "active"
@@ -161,8 +161,8 @@ def initiateSetProduct():
 
     set_product_popup.title("Product Setting")
     set_product_popup.geometry("260x350")
-    set_product_popup.minsize(260, 350)
-    set_product_popup.maxsize(260, 350)
+    set_product_popup.minsize(260, 400)
+    set_product_popup.maxsize(260, 400)
 
     set_product_frame = tk.Frame(set_product_popup, bg = "lightblue", padx = 25, pady = 8)
     set_product_frame.grid(row=0, column=0, sticky="n")
@@ -204,22 +204,29 @@ def initiateSetProduct():
 
     vcost_combobox = ttk.Combobox(set_product_frame, values = options_headers, state="readonly" )
     vcost_combobox.grid(row = 10, column = 0, pady = 5)
+
+    hcost_label = tk.Label(set_product_frame, text="Holding Cost", font=("Open Sans", 10), fg="black")
+    hcost_label.grid(row = 11, column =0, sticky = "w")
+
+    hcost_combobox = ttk.Combobox(set_product_frame, values = options_headers, state="readonly" )
+    hcost_combobox.grid(row = 12, column = 0, pady = 5)
     
-    set_product_confirm_button = tk.Button(set_product_popup, text = "Done", width = 10, height = 1, command = lambda: setProduct(display_index_dict[product_combobox.get()], display_index_dict[price_combobox.get()], display_index_dict[ltime_combobox.get()], display_index_dict[fcost_combobox.get()], display_index_dict[vcost_combobox.get()], set_product_popup))
-    set_product_confirm_button.place(x = 160, y = 310)
+    set_product_confirm_button = tk.Button(set_product_popup, text = "Done", width = 10, height = 1, command = lambda: setProduct(display_index_dict[product_combobox.get()], display_index_dict[price_combobox.get()], display_index_dict[ltime_combobox.get()], display_index_dict[fcost_combobox.get()], display_index_dict[vcost_combobox.get()], display_index_dict[hcost_combobox.get()], set_product_popup))
+    set_product_confirm_button.place(x = 160, y = 360)
     
 
-def setProduct(product,price,ltime,fcost,vcost,popup):
+def setProduct(product,price,ltime,fcost,vcost,hcost,popup):
     global set_head_product
 
-    if (product != "" and price != "" and ltime != "" and fcost != "" and vcost != ""):
+    if (product != "" and price != "" and ltime != "" and fcost != "" and vcost != "" and hcost != ""):
         set_head_product = []
         set_head_product.append(product)
         set_head_product.append(price)
         set_head_product.append(ltime)
         set_head_product.append(fcost)
         set_head_product.append(vcost) 
-        if (len(set_head_product) == 5):
+        set_head_product.append(hcost)
+        if (len(set_head_product) == 6):
             app.set_product_button.config(fg="green")
             popup.destroy()
             messagebox.showinfo("Information", "Product key columns are set")
@@ -258,37 +265,37 @@ def initiateSetSale():
     product_combobox = ttk.Combobox(set_sale_frame, values = options_headers, state="readonly" )
     product_combobox.grid(row = 4, column = 0, pady = 5)
 
-    Q_label = tk.Label(set_sale_frame, text="Quantity", font=("Open Sans", 10), fg="black")
-    Q_label.grid(row = 5, column =0, sticky = "w")
+    sold_Q_label = tk.Label(set_sale_frame, text="Quantity", font=("Open Sans", 10), fg="black")
+    sold_Q_label.grid(row = 5, column =0, sticky = "w")
 
-    Q_combobox = ttk.Combobox(set_sale_frame, values = options_headers, state="readonly" )
-    Q_combobox.grid(row = 6, column = 0, pady = 5)
+    sold_Q_combobox = ttk.Combobox(set_sale_frame, values = options_headers, state="readonly" )
+    sold_Q_combobox.grid(row = 6, column = 0, pady = 5)
 
-    set_sale_confirm_button = tk.Button(set_sale_popup, text = "Done", width = 10, height = 1, command = lambda: setSale(display_index_dict[date_combobox.get()], display_index_dict[product_combobox.get()], display_index_dict[Q_combobox.get()], set_sale_popup))
+    set_sale_confirm_button = tk.Button(set_sale_popup, text = "Done", width = 10, height = 1, command = lambda: setSale(display_index_dict[date_combobox.get()], display_index_dict[product_combobox.get()], display_index_dict[sold_Q_combobox.get()], set_sale_popup))
     set_sale_confirm_button.place(x = 160, y = 200)
 
-def setSale(date,product,Q,popup):
+def setSale(date,product,sold_Q,popup):
     global set_head_sale
     
-    if (date != "" and product != "" and Q != ""):
+    if (date != "" and product != "" and sold_Q != ""):
         set_head_sale = []
         set_head_sale.append(date)
         set_head_sale.append(product)
-        set_head_sale.append(Q)
+        set_head_sale.append(sold_Q)
         if (len(set_head_sale) == 3):
             app.set_sale_button.config(fg="green")
             popup.destroy()
             messagebox.showinfo("Information", "Sale key columns are set")
-            if (len(set_head_product) == 5):
+            if (len(set_head_product) == 6):
                 app.analyze_button["state"] = "active"
 
 def intiateAnalyze():
     analyze_popup = tk.Toplevel(app.app)
 
     analyze_popup.title("Analyze")
-    analyze_popup.geometry("260x220")
-    analyze_popup.minsize(260, 220)
-    analyze_popup.maxsize(260, 220)
+    analyze_popup.geometry("260x270")
+    analyze_popup.minsize(260, 270)
+    analyze_popup.maxsize(260, 270)
 
     analyze_frame = tk.Frame(analyze_popup, bg = "lightblue", padx = 25, pady = 8)
     analyze_frame.grid(row=0, column=0, sticky="n")
@@ -319,20 +326,27 @@ def intiateAnalyze():
     service_entry = tk.Entry(analyze_frame, width = 23)
     service_entry.grid(row = 5, column = 0, pady = 5)
 
-    analyze_confirm_button = tk.Button(analyze_popup, text = "Done", width = 10, height = 1, command = lambda: preProcessSheet(display_index_dict[case_combobox.get()], period_combobox.get(), service_entry.get()))
-    analyze_confirm_button.place(x = 160, y = 180)
+    review_label = tk.Label(analyze_frame, text="Review Period", font=("Open Sans", 10), fg="black")
+    review_label.grid(row = 6, column =0, sticky = "w")
 
-def preProcessSheet(case, period, service):
+    review_entry = tk.Entry(analyze_frame, width = 23)
+    review_entry.grid(row = 7, column = 0, pady = 5)
+
+    analyze_confirm_button = tk.Button(analyze_popup, text = "Done", width = 10, height = 1, command = lambda: preProcessSheet(display_index_dict[case_combobox.get()], period_combobox.get(), service_entry.get(), review_entry.get()))
+    analyze_confirm_button.place(x = 160, y = 230)
+
+def preProcessSheet(case, period, service, review):
     # Product Setting
     product_id_col_prod = set_head_product[0]
     price_col = set_head_product[1]
     ltime_col = set_head_product[2]
     fcost_col = set_head_product[3]
     vcost_col = set_head_product[4]
+    hcost_col = set_head_product[5]
     # Sale setting
     date_col = set_head_sale[0]
     product_id_col_sale = set_head_sale[1]
-    Q_col = set_head_sale[2]
+    sold_Q_col = set_head_sale[2]
 
     data = sale_sheet_arr[case].get_sheet_data()
     # Sum Items/Day/SKU
@@ -341,34 +355,34 @@ def preProcessSheet(case, period, service):
         if row[date_col] not in period_dict:
             period_dict[row[date_col]] = {}
         if row[product_id_col_sale] not in period_dict[row[date_col]]:
-            period_dict[row[date_col]][row[product_id_col_sale]] = row[Q_col]
+            period_dict[row[date_col]][row[product_id_col_sale]] = row[sold_Q_col]
         else:
-            period_dict[row[date_col]][row[product_id_col_sale]] += row[Q_col]
+            period_dict[row[date_col]][row[product_id_col_sale]] += row[sold_Q_col]
 
     period = len(period_dict)
     #print(period)
 
-    #Service Level
+    # Service Level -> Safety Factor
     safety_factor = norm.ppf(int(service)/100, loc=0, scale=1)
     #print(safety_factor)
 
     # Product info.
     data_product = product_sheet_arr[case].get_sheet_data()
     np_matrix = np.array(data_product)
-        #Product ID
+        # Product ID
     data_product_id = np_matrix.T[product_id_col_prod]
     #print(data_product_id)
 
-        #Price
+        # Price
     price_dict = {}
     data_product_price = np_matrix.T[price_col]
     index = 0
     for product_id in data_product_id:
         price_dict[product_id] = data_product_price[index]
         index +=1
-    #print(ltime_dict)
+    #print(price_dict)
 
-        #Lead time
+        # Lead time
     ltime_dict = {}
     data_product_leadtime = np_matrix.T[ltime_col]
     index = 0
@@ -377,25 +391,34 @@ def preProcessSheet(case, period, service):
         index +=1
     #print(ltime_dict)
 
-    #Fixed Cost
+        # Fixed Cost
     fcost_dict = {}
     data_product_fcost = np_matrix.T[fcost_col]
     index = 0
     for product_id in data_product_id:
         fcost_dict[product_id] = data_product_fcost[index]
         index +=1
-    #print(ltime_dict)
+    #print(fcost_dict)
 
-    #Vary Cost
+        # Vary Cost
     vcost_dict = {}
     data_product_vcost = np_matrix.T[vcost_col]
     index = 0
     for product_id in data_product_id:
         vcost_dict[product_id] = data_product_vcost[index]
         index +=1
-    #print(ltime_dict)
+    #print(vcost_dict)
 
-    #Calculate AVG Demand
+        # Holding Cost
+    hcost_dict = {}
+    data_product_hcost = np_matrix.T[hcost_col]
+    index = 0
+    for product_id in data_product_id:
+        hcost_dict[product_id] = data_product_hcost[index]
+        index +=1
+    #print(hcost_dict)
+
+    # Calculate AVG Demand
     avg_dict = {}
     for product_id in data_product_id:
         product_cum = 0
@@ -406,14 +429,14 @@ def preProcessSheet(case, period, service):
         avg_dict[product_id] = product_avg  
     #print(avg_dict) 
 
-    #Calculate AVG Demand during Lead Time
+    # Calculate AVG Demand during Lead Time
     avgl_dict = {}
     for product_id in data_product_id:
         product_avgl = float(avg_dict[product_id])*float(ltime_dict[product_id])
         avgl_dict[product_id] = product_avgl
-    print(avgl_dict) 
+    #print(avgl_dict) 
 
-    #Calculate STD Demand
+    # Calculate STD Demand
     std_dict = {}
     for product_id in data_product_id:
         product_date_arr = []
@@ -426,40 +449,78 @@ def preProcessSheet(case, period, service):
         std_dict[product_id] = product_std 
     #print(std_dict)
 
-    #(Q,R) Policy
+    # Safety Stock
+    safety_stock_dict = {}
+    for product_id in data_product_id:
+        safety_stock = safety_factor * float(std_dict[product_id]) * math.sqrt(float(ltime_dict[product_id])) 
+        safety_stock_dict[product_id] = math.ceil(safety_stock)
+    #print(safety_stock_dict)
 
-def analyze(sheet, L, AVG, z, K, h, STD, AVGL, STDL, r, R, Q, D):
-    if isAnyData(sheet):
-        try:
-            # (Q, R) Policy
-            #AverageDemandDuringLeadTime = L * AVG 
-            #SafetyStock = z * STD * math.sqrt(L)
-            ReorderLevel = (L * AVG) + (z * STD * math.sqrt(L))
-            OrderQuantity = math.sqrt(((2 * K) * AVG) / h)
-            InventoryLevelBeforeReceivingAnOrder = z * STD * math.sqrt(L)
-            InventoryLevelAfterReceivingAnOrder = (Q + z) * STD * math.sqrt(L)
-            AverageInventory = Q / (2 + (z * STD * math.sqrt(L)))
-            ReorderPoint = (AVG * AVGL) + z * math.sqrt((AVGL * STD^2) + (AVG^2 * STDL^2))
-            DemandDuringLeadTime = AVG * AVGL
-            StandardDeviationOfDemandDuringLeadTime = math.sqrt((AVGL * STD^2) + (AVG^2 * STDL^2))
-            AmountOfSafetyStock = z * math.sqrt((AVGL * STD^2) + (AVG^2 * STDL^2))
-            # (s, S) Policy
-            s = R 
-            S = R + Q
-            # Base-stock level Policy
-            AverageDemandDuringAnIntervalOfRplusLDays = (r + L) * AVG
-            SafetyStockBS = z * STD * math.sqrt(r + L)
-            BasestockLevelS = (r + L) * AVG + (z * STD * math.sqrt(r + L))
-            AverageInventoryBS = (r * D) / (2 + (z * STD * math.sqrt(r + L)))
-            # Base-stock level Policy (Lead time = uncertain, Normally distributed with lead time of AVGL, and STDL)
-            AverageDemandDuringAnIntervalOfRplusLDaysUncertain = (r + AVGL) * AVG
-            StandardDeviationOfDemandDuringAnIntervalOfRplusLDaysUncertain = math.sqrt((r + AVGL) * STD^2 + (AVG^2 * STDL^2))
-            SafetyStockBSUncertain = z * math.sqrt((r + AVGL) * STD^2 + (AVG^2 * STDL^2))
-            BasestockLevelSUncertain = (r + AVGL) * AVG + SafetyStockBSUncertain
-        except:
-            print("Error")
-    else:
-        print("Import your data or filled the table")
+    # (Q,R) Policy
+        # Order Quantity
+    order_Q_dict = {}
+    for product_id in data_product_id:
+        order_Q = math.sqrt(((2 * float(fcost_dict[product_id])) * float(avg_dict[product_id])) / float(hcost_dict[product_id])) 
+        order_Q_dict[product_id] = math.ceil(order_Q)   
+    #print(order_Q_dict)
+
+        # Reorder Level
+    reorder_dict = {}
+    for product_id in data_product_id:
+        reorder = float(avgl_dict[product_id]) + float(safety_stock_dict[product_id])
+        reorder_dict[product_id] = math.ceil(reorder)   
+    #print(reorder_dict)
+
+        # Average Inventory
+    avgi_dict = {}
+    for product_id in data_product_id:
+        avgi = (float(order_Q_dict[product_id])/2) + float(safety_stock_dict[product_id])
+        avgi_dict[product_id] = avgi
+    #print(avgi_dict)
+
+    # (s,S) Policy
+        # s
+    s_dict = {}
+    for product_id in data_product_id:
+        s = float(reorder_dict[product_id])
+        s_dict[product_id] = s
+    #print(s_dict)
+
+        # S
+    S_dict = {}
+    for product_id in data_product_id:
+        S = float(reorder_dict[product_id]) + float(order_Q_dict[product_id])
+        S_dict[product_id] = S
+    #print(S_dict) 
+
+    # Base Stock Policy
+        # Average demand during an interval of r + L days
+    avgl_bs_dict = {}
+    for product_id in data_product_id:
+        avgl_bs = (float(review) + float(ltime_dict[product_id])) * float(avg_dict[product_id])
+        avgl_bs_dict[product_id] = avgl_bs
+    #print(avgl_bs_dict)
+
+        # Safety Stock (Base Stock Policy)
+    safety_stock_bs_dict = {}
+    for product_id in data_product_id:
+        safety_stock_bs = safety_factor * float(std_dict[product_id]) * math.sqrt((float(review) + float(ltime_dict[product_id]))) 
+        safety_stock_bs_dict[product_id] = math.ceil(safety_stock_bs)
+    #print(safety_stock_bs_dict)
+
+        # Base-stock level
+    bs_level_dict = {}
+    for product_id in data_product_id:
+        bs_level = float(avgl_bs_dict[product_id]) + float(safety_stock_bs_dict[product_id])
+        bs_level_dict[product_id] = math.ceil(bs_level)   
+    #print(bs_level_dict)
+
+        # Average inventory (Base Stock Policy)
+    avgi_bs_dict = {}
+    for product_id in data_product_id:
+        avgi_bs = (float(review)*float(avg_dict[product_id]))/2 + float(safety_stock_bs_dict[product_id])
+        avgi_bs_dict[product_id] = avgi_bs 
+    #print(avgi_bs_dict)
     
 def isAnyData(sheet):
     data = sheet.get_sheet_data()
