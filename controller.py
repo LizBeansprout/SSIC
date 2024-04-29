@@ -62,7 +62,7 @@ def analyze(sheet, L, AVG, z, K, h, STD, AVGL, STDL, r, R, Q, D):
             SafetyStockBSUncertain = z * math.sqrt((r + AVGL) * STD^2 + (AVG^2 * STDL^2))
             BasestockLevelSUncertain = (r + AVGL) * AVG + SafetyStockBSUncertain
         except:
-            print("Err")
+            print("Error")
     else:
         print("Import your data or filled the table")
 #Sun
