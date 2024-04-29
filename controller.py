@@ -14,7 +14,7 @@ active_type = None
 product_sheet_arr = []
 sale_sheet_arr = []
 nav_sheet_arr = []
-def importExcel():
+def importProductExcel():
     global active_index
     global active_type
     
@@ -22,7 +22,7 @@ def importExcel():
         # Load Excel (not include formula, Only read as actual data)
         file_path = filedialog.askopenfilename(filetypes = [("Excel files", "*.xlsx;*.xls")])
         if not file_path:
-            return  # User cancelled the file dialog
+            return
 
         new_product_sheet = Sheet(app.right_frame,
                                     data = pd.read_excel(file_path,
@@ -50,11 +50,35 @@ def importExcel():
         addNavSheet()
         updateNavSheet()
 
+        if (isAnyProductData()):
+            app.import_sale_button["state"] = "active"
+        else:
+            app.import_sale_button["state"] = "disabled"
+
     except Exception as e:
         print(f"Error importing Excel file: {e}")
 
 def importSaleExcel():
-    pass
+    global active_index
+    global active_type
+
+    try:
+        # Load Excel (not include formula, Only read as actual data)
+        file_path = filedialog.askopenfilename(filetypes = [("Excel files", "*.xlsx;*.xls")])
+        if not file_path:
+            return
+        
+        sale_sheet_arr[active_index].set_sheet_data(pd.read_excel(file_path,
+                                                       engine = "openpyxl",
+                                                       header = None).values.tolist()) 
+        
+        product_sheet_arr[active_index].grid_remove()
+        sale_sheet_arr[active_index].grid_remove()
+        sale_sheet_arr[active_index].grid(row=0, column=0, sticky = "nw")
+        active_type = "sale"
+
+    except Exception as e:
+        print(f"Error importing Excel file: {e}")
 
 def addNavSheet():
     index = len(nav_sheet_arr)
@@ -91,7 +115,21 @@ def selectSheet(selected_sheet_index):
             active_type = "product"
     
     active_index = selected_sheet_index
+
+    if (isAnyProductData()):
+        app.import_sale_button["state"] = "active"
+    else:
+        app.import_sale_button["state"] = "disabled"
+
     print(active_index)
+
+def analyze():
+    analyze_popup = tk.Toplevel(app)
+
+    analyze_popup.title("Analyze")
+    analyze_popup.geometry("540x360")
+    analyze_popup.minsize(540, 360)
+    analyze_popup.maxsize(540, 360)
 
 def isAnyData(sheet):
     data = sheet.get_sheet_data()
@@ -101,4 +139,16 @@ def isAnyData(sheet):
                 print("Data in Table!")
                 return True
     print("None in Table!")
+    return False
+
+def isAnyProductData():
+    global active_index
+    if (active_index != None):
+        data = product_sheet_arr[active_index].get_sheet_data()
+        for row in data:
+            for cell in row:
+                if cell != '':
+                    #print("Data in Table!")
+                    return True
+        #print("None in Table!")
     return False

@@ -50,8 +50,9 @@ nav_sheet_frame = tk.Frame(right_frame, bg = "blue")
 nav_sheet_frame.grid(row=1, sticky="sw")
 
 # Adding import button
-import_product_button = tk.Button(left_frame, text = "Import Product",width = 50, height = 2, command = lambda: controller.importExcel())
-import_sale_button = tk.Button(left_frame, text = "Import Sale",width = 50, height = 2, command = controller.importSaleExcel)
+import_product_button = tk.Button(left_frame, text = "Import Product",width = 50, height = 2, command = controller.importProductExcel)
+import_sale_button = tk.Button(left_frame, text = "Import Sale",width = 50, height = 2, state = "disabled", command = controller.importSaleExcel)
+
 import_product_button.grid(row=0, column=0, pady=(0,8) )
 import_sale_button.grid(row=1, column=0, pady=(0,8) )
 
