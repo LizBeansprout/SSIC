@@ -1,0 +1,19 @@
+standard_binding = [
+            "single_select",
+            "select_all",
+            "drag_select",
+            "copy",
+            "cut",
+            "paste",
+            "undo",
+            "redo",
+            "resize",
+            "column_select",
+            "row_select",
+            "external_drag_drop",
+            "box_select",
+            "open_editor",
+            "delete",
+            "deselect",
+            "edit_cell"
+        ]
