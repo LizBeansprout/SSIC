@@ -3,6 +3,9 @@ from tkinter import ttk, filedialog, messagebox
 from tksheet import Sheet
 import openpyxl as pxl
 import pandas as pd
+import numpy as np
+import statistics
+from scipy.stats import norm
 import math
 
 import app
@@ -12,8 +15,8 @@ active_index = None
 active_type = None
 analyzed = []
 
-set_head_product = []
-set_head_sale = []
+set_head_product = [0,1,2,3,4]
+set_head_sale = [0,1,2]
 
 product_sheet_arr = []
 sale_sheet_arr = []
@@ -114,6 +117,8 @@ def updateNavSheet():
 def selectSheet(selected_sheet_index):
     global active_index
     global active_type
+    global set_head_sale
+    global set_head_product
 
     previous_active = active_index
     product_sheet_arr[active_index].grid_remove()
@@ -131,6 +136,11 @@ def selectSheet(selected_sheet_index):
             active_type = "product"
     
     active_index = selected_sheet_index
+
+    set_head_product = []
+    set_head_sale = []
+    app.set_product_button.config(fg="black")
+    app.set_sale_button.config(fg="black")
 
     if (isAnyProductData()):
         app.set_product_button["state"] = "active"
@@ -313,18 +323,150 @@ def intiateAnalyze():
     analyze_confirm_button.place(x = 160, y = 180)
 
 def preProcessSheet(case, period, service):
-    print(case)
-    print(period)
-    print(service)
+    # Product Setting
+    product_id_col_prod = set_head_product[0]
+    price_col = set_head_product[1]
+    ltime_col = set_head_product[2]
+    fcost_col = set_head_product[3]
+    vcost_col = set_head_product[4]
+    # Sale setting
+    date_col = set_head_sale[0]
+    product_id_col_sale = set_head_sale[1]
+    Q_col = set_head_sale[2]
 
+    data = sale_sheet_arr[case].get_sheet_data()
+    # Sum Items/Day/SKU
+    period_dict = {}
+    for row in data:
+        if row[date_col] not in period_dict:
+            period_dict[row[date_col]] = {}
+        if row[product_id_col_sale] not in period_dict[row[date_col]]:
+            period_dict[row[date_col]][row[product_id_col_sale]] = row[Q_col]
+        else:
+            period_dict[row[date_col]][row[product_id_col_sale]] += row[Q_col]
+
+    period = len(period_dict)
+    #print(period)
+
+    #Service Level
+    safety_factor = norm.ppf(int(service)/100, loc=0, scale=1)
+    #print(safety_factor)
+
+    # Product info.
+    data_product = product_sheet_arr[case].get_sheet_data()
+    np_matrix = np.array(data_product)
+        #Product ID
+    data_product_id = np_matrix.T[product_id_col_prod]
+    #print(data_product_id)
+
+        #Price
+    price_dict = {}
+    data_product_price = np_matrix.T[price_col]
+    index = 0
+    for product_id in data_product_id:
+        price_dict[product_id] = data_product_price[index]
+        index +=1
+    #print(ltime_dict)
+
+        #Lead time
+    ltime_dict = {}
+    data_product_leadtime = np_matrix.T[ltime_col]
+    index = 0
+    for product_id in data_product_id:
+        ltime_dict[product_id] = data_product_leadtime[index]
+        index +=1
+    #print(ltime_dict)
+
+    #Fixed Cost
+    fcost_dict = {}
+    data_product_fcost = np_matrix.T[fcost_col]
+    index = 0
+    for product_id in data_product_id:
+        fcost_dict[product_id] = data_product_fcost[index]
+        index +=1
+    #print(ltime_dict)
+
+    #Vary Cost
+    vcost_dict = {}
+    data_product_vcost = np_matrix.T[vcost_col]
+    index = 0
+    for product_id in data_product_id:
+        vcost_dict[product_id] = data_product_vcost[index]
+        index +=1
+    #print(ltime_dict)
+
+    #Calculate AVG Demand
+    avg_dict = {}
+    for product_id in data_product_id:
+        product_cum = 0
+        for key in period_dict:
+            if product_id in period_dict[key]:
+                product_cum += period_dict[key][product_id]
+        product_avg = product_cum/ period  
+        avg_dict[product_id] = product_avg  
+    #print(avg_dict) 
+
+    #Calculate AVG Demand during Lead Time
+    avgl_dict = {}
+    for product_id in data_product_id:
+        product_avgl = float(avg_dict[product_id])*float(ltime_dict[product_id])
+        avgl_dict[product_id] = product_avgl
+    print(avgl_dict) 
+
+    #Calculate STD Demand
+    std_dict = {}
+    for product_id in data_product_id:
+        product_date_arr = []
+        for key in period_dict:
+            if product_id in period_dict[key]:
+                product_date_arr.append(period_dict[key][product_id])
+            else:
+                product_date_arr.append(0)
+        product_std = statistics.stdev(product_date_arr) 
+        std_dict[product_id] = product_std 
+    #print(std_dict)
+
+    #(Q,R) Policy
+
+def analyze(sheet, L, AVG, z, K, h, STD, AVGL, STDL, r, R, Q, D):
+    if isAnyData(sheet):
+        try:
+            # (Q, R) Policy
+            #AverageDemandDuringLeadTime = L * AVG 
+            #SafetyStock = z * STD * math.sqrt(L)
+            ReorderLevel = (L * AVG) + (z * STD * math.sqrt(L))
+            OrderQuantity = math.sqrt(((2 * K) * AVG) / h)
+            InventoryLevelBeforeReceivingAnOrder = z * STD * math.sqrt(L)
+            InventoryLevelAfterReceivingAnOrder = (Q + z) * STD * math.sqrt(L)
+            AverageInventory = Q / (2 + (z * STD * math.sqrt(L)))
+            ReorderPoint = (AVG * AVGL) + z * math.sqrt((AVGL * STD^2) + (AVG^2 * STDL^2))
+            DemandDuringLeadTime = AVG * AVGL
+            StandardDeviationOfDemandDuringLeadTime = math.sqrt((AVGL * STD^2) + (AVG^2 * STDL^2))
+            AmountOfSafetyStock = z * math.sqrt((AVGL * STD^2) + (AVG^2 * STDL^2))
+            # (s, S) Policy
+            s = R 
+            S = R + Q
+            # Base-stock level Policy
+            AverageDemandDuringAnIntervalOfRplusLDays = (r + L) * AVG
+            SafetyStockBS = z * STD * math.sqrt(r + L)
+            BasestockLevelS = (r + L) * AVG + (z * STD * math.sqrt(r + L))
+            AverageInventoryBS = (r * D) / (2 + (z * STD * math.sqrt(r + L)))
+            # Base-stock level Policy (Lead time = uncertain, Normally distributed with lead time of AVGL, and STDL)
+            AverageDemandDuringAnIntervalOfRplusLDaysUncertain = (r + AVGL) * AVG
+            StandardDeviationOfDemandDuringAnIntervalOfRplusLDaysUncertain = math.sqrt((r + AVGL) * STD^2 + (AVG^2 * STDL^2))
+            SafetyStockBSUncertain = z * math.sqrt((r + AVGL) * STD^2 + (AVG^2 * STDL^2))
+            BasestockLevelSUncertain = (r + AVGL) * AVG + SafetyStockBSUncertain
+        except:
+            print("Error")
+    else:
+        print("Import your data or filled the table")
+    
 def isAnyData(sheet):
     data = sheet.get_sheet_data()
     for row in data:
         for cell in row:
             if cell != '':
-                print("Data in Table!")
                 return True
-    print("None in Table!")
     return False
 
 def isAnyProductData():
@@ -335,9 +477,7 @@ def isAnyProductData():
         for row in data:
             for cell in row:
                 if cell != '':
-                    #print("Data in Table!")
                     return True
-        #print("None in Table!")
     return False
 
 def isAnySaleData():
@@ -348,7 +488,5 @@ def isAnySaleData():
         for row in data:
             for cell in row:
                 if cell != '':
-                    #print("Data in Table!")
                     return True
-        #print("None in Table!")
     return False

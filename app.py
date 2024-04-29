@@ -60,5 +60,5 @@ import_sale_button.grid(row=1, column=0, pady=(0,8) )
 set_product_button.grid(row=0, column=1, pady=(0,8) )
 set_sale_button.grid(row=1, column=1, pady=(0,8) )
 
-analyze_button = tk.Button(left_frame, text = "Analyze",width = 50, height = 2, state = 'disabled', command = controller.intiateAnalyze)
+analyze_button = tk.Button(left_frame, text = "Analyze",width = 50, height = 2, state = 'active', command = controller.intiateAnalyze)
 analyze_button.grid(row=2, column=0)
