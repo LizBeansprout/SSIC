@@ -15,8 +15,8 @@ active_index = None
 active_type = None
 analyzed = []
 
-set_head_product = [0,1,2,3,4,5]
-set_head_sale = [0,1,2]
+set_head_product = []
+set_head_sale = []
 
 product_sheet_arr = []
 sale_sheet_arr = []
@@ -25,6 +25,8 @@ nav_sheet_arr = []
 def importProductExcel():
     global active_index
     global active_type
+    global set_head_product
+    global set_head_sale
     
     try:
         # Load Excel (not include formula, Only read as actual data)
@@ -57,6 +59,9 @@ def importProductExcel():
 
         active_index = product_sheet_arr.index(new_product_sheet)
         active_type = "product"
+
+        set_head_product.append([])
+        set_head_sale.append([])
         analyzed.append([])
 
         addNavSheet()
@@ -69,11 +74,23 @@ def importProductExcel():
             app.set_product_button["state"] = "disabled"
             app.import_sale_button["state"] = "disabled"
 
+        if (isAnySaleData()):
+            app.set_sale_button["state"] = "active"
+        else:
+            app.set_sale_button["state"] = "disabled"
+
+        if (len(set_head_product[active_index]) == 6) and (len(set_head_sale[active_index]) == 3):
+            app.analyze_button["state"] = "active"
+        else:
+            app.analyze_button["state"] = "disabled"
+
         if (analyzed[active_index] != []):
             app.result_button["state"] = "active"
         else:
             app.result_button["state"] = "disable"
 
+        print(set_head_product)
+        print(set_head_sale)
     except Exception as e:
         print(f"Error importing Excel file: {e}")
 
@@ -96,6 +113,7 @@ def importSaleExcel():
         product_sheet_arr[active_index].grid_remove()
         sale_sheet_arr[active_index].grid_remove()
         sale_sheet_arr[active_index].grid(row=0, column=0, sticky = "nw")
+
         active_type = "sale"
 
         if (isAnySaleData()):
@@ -124,8 +142,9 @@ def updateNavSheet():
 def selectSheet(selected_sheet_index):
     global active_index
     global active_type
-    global set_head_sale
     global set_head_product
+    global set_head_sale
+    
 
     previous_active = active_index
     product_sheet_arr[active_index].grid_remove()
@@ -144,12 +163,6 @@ def selectSheet(selected_sheet_index):
     
     active_index = selected_sheet_index
 
-    set_head_product = []
-    set_head_sale = []
-    app.set_product_button.config(fg="black")
-    app.set_sale_button.config(fg="black")
-    app.analyze_button["state"] = "disabled"
-
     if (isAnyProductData()):
         app.set_product_button["state"] = "active"
         app.import_sale_button["state"] = "active"
@@ -162,12 +175,30 @@ def selectSheet(selected_sheet_index):
     else:
         app.set_sale_button["state"] = "disabled"
 
+    if (len(set_head_product[active_index]) == 6):
+        app.set_product_button.config(fg="green")
+    else:
+        app.set_product_button.config(fg="black")
+
+
+    if (len(set_head_sale[active_index]) == 3):
+        app.set_sale_button.config(fg="green")
+    else:
+        app.set_sale_button.config(fg="black")
+
+    if (len(set_head_product[active_index]) == 6) and (len(set_head_sale[active_index]) == 3):
+        app.analyze_button["state"] = "active"
+    else:
+        app.analyze_button["state"] = "disabled"
+
     if (analyzed[active_index] != []):
         app.result_button["state"] = "active"
     else:
         app.result_button["state"] = "disable"
 
     print(active_index)
+    #print(set_head_product)
+    #print(set_head_sale)
     
 def initiateSetProduct():
     set_product_popup = tk.Toplevel(app.app)
@@ -230,21 +261,24 @@ def initiateSetProduct():
 
 def setProduct(product,price,ltime,fcost,vcost,hcost,popup):
     global set_head_product
+    global set_head_sale
 
     if (product != "" and price != "" and ltime != "" and fcost != "" and vcost != "" and hcost != ""):
-        set_head_product = []
-        set_head_product.append(product)
-        set_head_product.append(price)
-        set_head_product.append(ltime)
-        set_head_product.append(fcost)
-        set_head_product.append(vcost) 
-        set_head_product.append(hcost)
-        if (len(set_head_product) == 6):
+        set_head_product[active_index] = []
+        set_head_product[active_index].append(product)
+        set_head_product[active_index].append(price)
+        set_head_product[active_index].append(ltime)
+        set_head_product[active_index].append(fcost)
+        set_head_product[active_index].append(vcost) 
+        set_head_product[active_index].append(hcost)
+        if (len(set_head_product[active_index]) == 6):
             app.set_product_button.config(fg="green")
             popup.destroy()
             messagebox.showinfo("Information", "Product key columns are set")
-            if (len(set_head_sale) == 3):
+            if (len(set_head_sale[active_index]) == 3):
                 app.analyze_button["state"] = "active"
+        #print(set_head_product)
+        #print(set_head_sale)
     
 
 def initiateSetSale():
@@ -289,18 +323,21 @@ def initiateSetSale():
 
 def setSale(date,product,sold_Q,popup):
     global set_head_sale
+    global set_head_product
     
     if (date != "" and product != "" and sold_Q != ""):
-        set_head_sale = []
-        set_head_sale.append(date)
-        set_head_sale.append(product)
-        set_head_sale.append(sold_Q)
-        if (len(set_head_sale) == 3):
+        set_head_sale[active_index] = []
+        set_head_sale[active_index].append(date)
+        set_head_sale[active_index].append(product)
+        set_head_sale[active_index].append(sold_Q)
+        if (len(set_head_sale[active_index]) == 3):
             app.set_sale_button.config(fg="green")
             popup.destroy()
             messagebox.showinfo("Information", "Sale key columns are set")
-            if (len(set_head_product) == 6):
+            if (len(set_head_product[active_index]) == 6):
                 app.analyze_button["state"] = "active"
+        #print(set_head_product)
+        #print(set_head_sale)
 
 def intiateAnalyze():
     analyze_popup = tk.Toplevel(app.app)
@@ -353,16 +390,16 @@ def analyzeSheet(case, period, service, review, popup):
     global analyzed
 
     # Product Setting
-    product_id_col_prod = set_head_product[0]
-    price_col = set_head_product[1]
-    ltime_col = set_head_product[2]
-    fcost_col = set_head_product[3]
-    vcost_col = set_head_product[4]
-    hcost_col = set_head_product[5]
+    product_id_col_prod = set_head_product[active_index][0]
+    price_col = set_head_product[active_index][1]
+    ltime_col = set_head_product[active_index][2]
+    fcost_col = set_head_product[active_index][3]
+    vcost_col = set_head_product[active_index][4]
+    hcost_col = set_head_product[active_index][5]
     # Sale setting
-    date_col = set_head_sale[0]
-    product_id_col_sale = set_head_sale[1]
-    sold_Q_col = set_head_sale[2]
+    date_col = set_head_sale[active_index][0]
+    product_id_col_sale = set_head_sale[active_index][1]
+    sold_Q_col = set_head_sale[active_index][2]
 
     data = sale_sheet_arr[case].get_sheet_data()
     # Sum Items/Day/SKU
