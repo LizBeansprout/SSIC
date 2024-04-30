@@ -13,13 +13,15 @@ import config
 
 active_index = None
 active_type = None
+analyzed = []
 
-set_head_product = []
-set_head_sale = []
+set_head_product = [0,1,2,3,4,5]
+set_head_sale = [0,1,2]
 
 product_sheet_arr = []
 sale_sheet_arr = []
 nav_sheet_arr = []
+
 def importProductExcel():
     global active_index
     global active_type
@@ -55,6 +57,7 @@ def importProductExcel():
 
         active_index = product_sheet_arr.index(new_product_sheet)
         active_type = "product"
+        analyzed.append([])
 
         addNavSheet()
         updateNavSheet()
@@ -65,6 +68,11 @@ def importProductExcel():
         else:
             app.set_product_button["state"] = "disabled"
             app.import_sale_button["state"] = "disabled"
+
+        if (analyzed[active_index] != []):
+            app.result_button["state"] = "active"
+        else:
+            app.result_button["state"] = "disable"
 
     except Exception as e:
         print(f"Error importing Excel file: {e}")
@@ -153,6 +161,11 @@ def selectSheet(selected_sheet_index):
         app.set_sale_button["state"] = "active"
     else:
         app.set_sale_button["state"] = "disabled"
+
+    if (analyzed[active_index] != []):
+        app.result_button["state"] = "active"
+    else:
+        app.result_button["state"] = "disable"
 
     print(active_index)
     
@@ -332,10 +345,13 @@ def intiateAnalyze():
     review_entry = tk.Entry(analyze_frame, width = 23)
     review_entry.grid(row = 7, column = 0, pady = 5)
 
-    analyze_confirm_button = tk.Button(analyze_popup, text = "Done", width = 10, height = 1, command = lambda: preProcessSheet(display_index_dict[case_combobox.get()], period_combobox.get(), service_entry.get(), review_entry.get()))
+    analyze_confirm_button = tk.Button(analyze_popup, text = "Done", width = 10, height = 1, command = lambda: analyzeSheet(display_index_dict[case_combobox.get()], period_combobox.get(), service_entry.get(), review_entry.get(), analyze_popup))
     analyze_confirm_button.place(x = 160, y = 230)
 
-def preProcessSheet(case, period, service, review):
+def analyzeSheet(case, period, service, review, popup):
+    global active_index
+    global analyzed
+
     # Product Setting
     product_id_col_prod = set_head_product[0]
     price_col = set_head_product[1]
@@ -358,8 +374,9 @@ def preProcessSheet(case, period, service, review):
             period_dict[row[date_col]][row[product_id_col_sale]] = row[sold_Q_col]
         else:
             period_dict[row[date_col]][row[product_id_col_sale]] += row[sold_Q_col]
-
-    period = len(period_dict)
+    
+    period_num  = len(period_dict)
+    period_text = f"{period_num} {period}"
     #print(period)
 
     # Service Level -> Safety Factor
@@ -425,7 +442,7 @@ def preProcessSheet(case, period, service, review):
         for key in period_dict:
             if product_id in period_dict[key]:
                 product_cum += period_dict[key][product_id]
-        product_avg = product_cum/ period  
+        product_avg = product_cum/ period_num  
         avg_dict[product_id] = product_avg  
     #print(avg_dict) 
 
@@ -482,14 +499,14 @@ def preProcessSheet(case, period, service, review):
         # s
     s_dict = {}
     for product_id in data_product_id:
-        s = float(reorder_dict[product_id])
+        s = reorder_dict[product_id]
         s_dict[product_id] = s
     #print(s_dict)
 
         # S
     S_dict = {}
     for product_id in data_product_id:
-        S = float(reorder_dict[product_id]) + float(order_Q_dict[product_id])
+        S = reorder_dict[product_id] + order_Q_dict[product_id]
         S_dict[product_id] = S
     #print(S_dict) 
 
@@ -521,7 +538,140 @@ def preProcessSheet(case, period, service, review):
         avgi_bs = (float(review)*float(avg_dict[product_id]))/2 + float(safety_stock_bs_dict[product_id])
         avgi_bs_dict[product_id] = avgi_bs 
     #print(avgi_bs_dict)
+
+    analyzed[active_index] = {# Processed Input
+                            "data_product_id": data_product_id, # array
+                            "period_dict": period_dict, 
+                            "period_text": period_text, # string
+                            "safety_factor": safety_factor, #float
+                            # Processed product
+                            "avg_dict": avg_dict, 
+                            "avgl_dict": avgl_dict, 
+                            "std_dict": std_dict, 
+                            "safety_stock_dict": safety_stock_dict, 
+                                # (Q,R)
+                            "order_Q_dict": order_Q_dict, 
+                            "reorder_dict": reorder_dict,
+                            "avgi_dict": avgi_dict, 
+                                # (s,S)
+                            "s_dict": s_dict, 
+                            "S_dict": S_dict,
+                                # Base-stock
+                            "avgl_bs_dict": avgl_bs_dict, 
+                            "safety_stock_bs_dict": safety_stock_bs_dict, 
+                            "bs_level_dict": bs_level_dict,
+                            "avgi_bs_dict": avgi_bs_dict}
     
+    if (analyzed[active_index] != []):
+        app.result_button["state"] = "active"
+    else:
+        app.result_button["state"] = "disable"
+
+    popup.destroy()
+    messagebox.showinfo("Information", "Result is saved")
+
+def result():
+    global analyzed
+
+    result_popup = tk.Toplevel(app.app)
+
+    result_popup.title("Result")
+    result_popup.geometry("560x750")
+    result_popup.minsize(560, 750)
+    result_popup.maxsize(560, 750)
+
+    result_label = tk.Label(result_popup, text=f"Result: Product / Sale {active_index + 1}", font=("Open Sans", 20), fg="black")
+    result_label.grid(row = 0, column =0, sticky = "nw")
+
+    result_frame = tk.Frame(result_popup, bg = "lightblue",padx = 25, pady = 8)
+    result_frame.grid(row=1, column=0, sticky="w")
+
+    input_process_label = tk.Label(result_frame, text=f"Processed Input", font=("Open Sans", 16), fg="black")
+    input_process_label.grid(row = 0, column = 0, sticky = "w")
+
+    process_input_frame = tk.Frame(result_frame, bg = "lightblue",padx = 25, pady = 12)
+    process_input_frame.grid(row=1, column=0, sticky="w")
+
+    product_num_label = tk.Label(process_input_frame, text= f"Number of products: {len(analyzed[active_index]['data_product_id'])}", font=("Open Sans", 10), fg="black")
+    product_num_label.grid(row = 0, column = 0, sticky = "w", pady = 12)
+
+    period_label = tk.Label(process_input_frame, text= f"Period: {analyzed[active_index]['period_text']}", font=("Open Sans", 10), fg="black")
+    period_label.grid(row = 0, column = 1, sticky = "w", padx = (15,0), pady = 12)
+
+    safetyf_label = tk.Label(process_input_frame, text= f"Safety Factor: {round(analyzed[active_index]['safety_factor'], 2)}", font=("Open Sans", 10), fg="black")
+    safetyf_label.grid(row = 1, column = 0, sticky = "w", pady = 12)
+
+    product_process_label = tk.Label(result_frame, text=f"Processed Product", font=("Open Sans", 16), fg="black")
+    product_process_label.grid(row = 2, column = 0, sticky = "w", pady = 12)
+
+    options_product_process = []
+    for product in analyzed[active_index]['data_product_id']:
+        options_product_process.append(product)
+    product_process_combobox = ttk.Combobox(result_frame, values = options_product_process, state="readonly" )
+    product_process_combobox.bind('<<ComboboxSelected>>',lambda event: update_product_labels(process_product_frame, product_process_combobox.get()))
+
+    process_product_frame = tk.Frame(result_frame, bg = "lightblue",padx = 25, pady = 12)
+
+    product_process_combobox.grid(row = 3, column = 0, pady = 10, sticky="w")
+    process_product_frame.grid(row=4, column=0, sticky="w")
+
+
+def update_product_labels(frame, selected):
+
+    for widget in frame.winfo_children():
+        widget.grid_remove()
+        
+    selected_product_option = selected
+  
+    avg_label = tk.Label(frame, text= f"Average Demand: {round(analyzed[active_index]['avg_dict'][selected_product_option],2)}", font=("Open Sans", 10), fg="black")
+    avg_label.grid(row = 0, column = 0, sticky = "w", pady = 10)
+
+    avgl_label = tk.Label(frame, text= f"Average Demand during Lead Time: {round(analyzed[active_index]['avgl_dict'][selected_product_option],2)}", font=("Open Sans", 10), fg="black")
+    avgl_label.grid(row = 0, column = 1, sticky = "w", padx = (15,0), pady = 10)
+
+    std_label = tk.Label(frame, text= f"Standard Deviation of Demand: {round(analyzed[active_index]['std_dict'][selected_product_option],2)}", font=("Open Sans", 10), fg="black")
+    std_label.grid(row = 1, column = 0, sticky = "w", pady = 10)
+
+    safety_stock_label = tk.Label(frame, text= f"Safety Stock: {analyzed[active_index]['safety_stock_dict'][selected_product_option]}", font=("Open Sans", 10), fg="black")
+    safety_stock_label.grid(row = 1, column = 1, sticky = "w", padx = (15,0), pady = 10)
+
+    QR_label = tk.Label(frame, text=f"(Q,R) Policy", font=("Open Sans", 14), fg="black")
+    QR_label.grid(row = 2, column = 0, sticky = "w", pady = 10)
+
+    order_Q_label = tk.Label(frame, text= f"Order Quantity (Q): {analyzed[active_index]['order_Q_dict'][selected_product_option]}", font=("Open Sans", 10), fg="black")
+    order_Q_label.grid(row = 3, column = 0, sticky = "w", pady = 10)
+
+    reorder_label = tk.Label(frame, text= f"Reorder Level (R): {analyzed[active_index]['reorder_dict'][selected_product_option]}", font=("Open Sans", 10), fg="black")
+    reorder_label.grid(row = 3, column = 1, sticky = "w", padx = (15,0), pady = 10)
+
+    avgi_label = tk.Label(frame, text= f"Average Inventory: {round(analyzed[active_index]['avgi_dict'][selected_product_option],2)}", font=("Open Sans", 10), fg="black")
+    avgi_label.grid(row = 4, column = 0, sticky = "w", pady = 10)
+
+    sS_label = tk.Label(frame, text=f"(s,S) Policy", font=("Open Sans", 14), fg="black")
+    sS_label.grid(row = 5, column = 0, sticky = "w", pady = 10)
+
+    s_label = tk.Label(frame, text= f"s: {analyzed[active_index]['s_dict'][selected_product_option]}", font=("Open Sans", 10), fg="black")
+    s_label.grid(row = 6, column = 0, sticky = "w", pady = 10)
+
+    S_label = tk.Label(frame, text= f"S: {analyzed[active_index]['S_dict'][selected_product_option]}", font=("Open Sans", 10), fg="black")
+    S_label.grid(row = 6, column = 1, sticky = "w", padx = (15,0), pady = 10)
+
+    bs_label = tk.Label(frame, text=f"Base-stock Policy", font=("Open Sans", 14), fg="black")
+    bs_label.grid(row = 7, column = 0, sticky = "w", pady = 10)
+
+    avgl_bs_label = tk.Label(frame, text= f"Average Demand during (r + L) Time: {round(analyzed[active_index]['avgl_bs_dict'][selected_product_option],2)}", font=("Open Sans", 10), fg="black")
+    avgl_bs_label.grid(row = 8, column = 0, sticky = "w", pady = 10)
+
+    safety_stock_bs_label = tk.Label(frame, text= f"Safety Stock: {analyzed[active_index]['safety_stock_bs_dict'][selected_product_option]}", font=("Open Sans", 10), fg="black")
+    safety_stock_bs_label.grid(row = 8, column = 1, sticky = "w", padx = (15,0), pady = 12)
+
+    bs_level_label = tk.Label(frame, text= f"Base-stock Level: {analyzed[active_index]['bs_level_dict'][selected_product_option]}", font=("Open Sans", 10), fg="black")
+    bs_level_label.grid(row = 9, column = 0, sticky = "w", pady = 10)
+
+    avgi_bs_label = tk.Label(frame, text= f"Average Inventory: {round(analyzed[active_index]['avgi_bs_dict'][selected_product_option],2)}", font=("Open Sans", 10), fg="black")
+    avgi_bs_label.grid(row = 9, column = 1, sticky = "w", padx = (15,0), pady = 10)
+
+
 def isAnyData(sheet):
     data = sheet.get_sheet_data()
     for row in data:
