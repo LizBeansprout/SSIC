@@ -126,7 +126,7 @@ def importSaleExcel():
 
 def addNavSheet():
     index = len(nav_sheet_arr)
-    new_nav = tk.Button(app.nav_sheet_frame, text = f"Product/Sale {index+1}",width = 12, height = 1, bg="lightblue", command = lambda: selectSheet(index))
+    new_nav = tk.Button(app.nav_sheet_frame, text = f"Product/Sale {index+1}",width = 12, height = 1, command = lambda: selectSheet(index))
     new_nav.grid(row=1, column = index, sticky = "sw")
     nav_sheet_arr.append(new_nav)
 
@@ -208,7 +208,7 @@ def initiateSetProduct():
     set_product_popup.minsize(260, 400)
     set_product_popup.maxsize(260, 400)
 
-    set_product_frame = tk.Frame(set_product_popup, bg = "lightblue", padx = 25, pady = 8)
+    set_product_frame = tk.Frame(set_product_popup, padx = 25, pady = 8)
     set_product_frame.grid(row=0, column=0, sticky="n")
 
     main_label = tk.Label(set_product_frame, text="Specify Key Columns", font=("Open Sans", 10), fg="black")
@@ -289,7 +289,7 @@ def initiateSetSale():
     set_sale_popup.minsize(260, 240)
     set_sale_popup.maxsize(260, 240)
 
-    set_sale_frame = tk.Frame(set_sale_popup, bg = "lightblue", padx = 25, pady = 8)
+    set_sale_frame = tk.Frame(set_sale_popup, padx = 25, pady = 8)
     set_sale_frame.grid(row=0, column=0, sticky="n")
 
     main_label = tk.Label(set_sale_frame, text="Specify Key Columns", font=("Open Sans", 10), fg="black")
@@ -347,7 +347,7 @@ def intiateAnalyze():
     analyze_popup.minsize(260, 270)
     analyze_popup.maxsize(260, 270)
 
-    analyze_frame = tk.Frame(analyze_popup, bg = "lightblue", padx = 25, pady = 8)
+    analyze_frame = tk.Frame(analyze_popup, padx = 25, pady = 8)
     analyze_frame.grid(row=0, column=0, sticky="n")
 
     case_label = tk.Label(analyze_frame, text="Case", font=("Open Sans", 10), fg="black")
@@ -620,13 +620,13 @@ def result():
     result_label = tk.Label(result_popup, text=f"Result: Product / Sale {active_index + 1}", font=("Open Sans", 20), fg="black")
     result_label.grid(row = 0, column =0, sticky = "nw")
 
-    result_frame = tk.Frame(result_popup, bg = "lightblue",padx = 25, pady = 8)
+    result_frame = tk.Frame(result_popup, padx = 25, pady = 8)
     result_frame.grid(row=1, column=0, sticky="w")
 
     input_process_label = tk.Label(result_frame, text=f"Processed Input", font=("Open Sans", 16), fg="black")
     input_process_label.grid(row = 0, column = 0, sticky = "w")
 
-    process_input_frame = tk.Frame(result_frame, bg = "lightblue",padx = 25, pady = 12)
+    process_input_frame = tk.Frame(result_frame, padx = 25, pady = 12)
     process_input_frame.grid(row=1, column=0, sticky="w")
 
     product_num_label = tk.Label(process_input_frame, text= f"Number of products: {len(analyzed[active_index]['data_product_id'])}", font=("Open Sans", 10), fg="black")
@@ -647,7 +647,7 @@ def result():
     product_process_combobox = ttk.Combobox(result_frame, values = options_product_process, state="readonly" )
     product_process_combobox.bind('<<ComboboxSelected>>',lambda event: update_product_labels(process_product_frame, product_process_combobox.get()))
 
-    process_product_frame = tk.Frame(result_frame, bg = "lightblue",padx = 25, pady = 12)
+    process_product_frame = tk.Frame(result_frame, padx = 25, pady = 12)
 
     product_process_combobox.grid(row = 3, column = 0, pady = 10, sticky="w")
     process_product_frame.grid(row=4, column=0, sticky="w")

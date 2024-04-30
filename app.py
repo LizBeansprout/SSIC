@@ -42,11 +42,11 @@ view_menu.add_cascade(label = 'Something')
 option_menu.add_cascade(label = 'Something')'''
 
 # Frame management
-left_frame = tk.Frame(app, bg = "lightblue",padx = 25, pady = 8)
+left_frame = tk.Frame(app, padx = 25, pady = 8)
 left_frame.grid(row=0, column=0, sticky="n")
-right_frame = tk.Frame(app, bg = "red")
+right_frame = tk.Frame(app)
 right_frame.grid(row=0, column=1, sticky="n")
-nav_sheet_frame = tk.Frame(right_frame, bg = "blue")
+nav_sheet_frame = tk.Frame(right_frame)
 nav_sheet_frame.grid(row=1, sticky="sw")
 
 # Adding import button
